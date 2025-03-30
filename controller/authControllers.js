@@ -1,3 +1,12 @@
+const userModel = require("../model/UserModel");
+const jwt = require("jsonwebtoken");
+const promisify = require("util").promisify;
+const promisifiedJWTSign = promisify(jwt.sign);
+const promisifiedJWTVerify = promisify(jwt.verify);
+// const otpGenerator = require("../utility/generateOtp");
+const { JWT_SECRET } = process.env;
+
+
 async function signupHandler(req, res) {
     try {
       const userObject = req.body;
@@ -59,7 +68,7 @@ async function signupHandler(req, res) {
       }
   
       //generate token
-      const authToken = await promisediedJWTsign({ id:user["_id"] },process.env.JWT_SECRET_KEY);
+      const authToken = await promisifiedJWTSign({ id:user["_id"] },process.env.JWT_SECRET_KEY);
   
       res.cookie("jwt",authToken, {
         maxAge:1000*60*60*24,
@@ -196,9 +205,36 @@ async function resetPasswordHandler(req,res){
   }
 }  
 
+
+/*****************middleware**********************/
+
+const protectedRouteMiddleWare = async function(req,res,next){
+  try{
+    let jwttoken = req.cookies.JWT;
+    if(!jwttoken) throw new Error("UnAuthorized!");
+
+    let decryptedToken = await promisifiedJWTVerify(jwttoken, JWT_SECRET);
+
+    if(decryptedToken){
+      let userId = decryptedToken.id;
+      // adding userId to the req object
+
+      req.userId = userId;
+      console.log("authenticated");
+      next();
+    }
+  }catch(err){
+    res.status(500).json({
+      message: err.message,
+      status:"failure"
+    })
+  }
+}
+
 module.exports = {
     signupHandler,
     loginHandler,
     forgetPasswordHandler,
-    resetPasswordHandler
+    resetPasswordHandler,
+    protectedRouteMiddleWare
 }

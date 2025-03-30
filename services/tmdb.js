@@ -26,22 +26,37 @@ const headers = {
     fetchHorrorMovies: `/discover/movie?language=en-US&with_genres=27`,
     fetchRomanceMovies: `/discover/movie?language=en-US&with_genres=10749`,
     fetchAnimeMovies: '/discover/movie?language=en-US&with_genres=16',
+
+    fetchMovieVideo: (id) => `/movie/${id}/videos`,
+    fetchMovieVideo: (id) => `/movie/${id}`,
+
   // tv enpoints
     fetchActionTvShows: `/discover/tv?language=en-US&with_genres=10759`,
     fetchComedyTvShows: `/discover/tv?language=en-US&with_genres=35`,
     fetchMysteryTvShows: `/discover/tv?language=en-US&with_genres=9648`,
     fetchDramaTvShows: `/discover/tv?language=en-US&with_genres=18`,
     fetchCrimeTvShows: `/discover/tv?language=en-US&with_genres=80`,
+
+    fetchTvShowVideo: (id) => `/tv/${id}/videos`,
+    fetchTvShowDetails: (id) => `/tv/${id}`,
   };
 
-  async function getMediaList(endpoint) {
-    const url = tmdbBASEURL + endpoint;
-    const response = await fetch(url, { method: 'GET', headers: headers })
-    const data = response.json()
+  // async function getMediaList(endpoint) {
+  //   const url = tmdbBASEURL + endpoint;
+  //   const response = await fetch(url, { method: 'GET', headers: headers })
+  //   const data = response.json()
+  //   return data;
+  // }
+  
+const tmdbApi = {
+  get: async (endpoint) => {
+    const url = tmdbBASEURL+endpoint;
+    const response = await fetch (url , {method: 'GET',headers: headers})
+    const data = await response.json();
     return data;
   }
-  
+}
 
   module.exports={
-    getMediaList, TMDB_ENDPOINT,
+    tmdbApi, TMDB_ENDPOINT,
 }

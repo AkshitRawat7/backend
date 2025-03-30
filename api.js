@@ -4,7 +4,7 @@ const express = require("express");
 const app = express();
 const cookieParser = require("cookie-parser");
 // const movieModel = require('./models/movieModel');
-const userModel = require("./model/userModel");
+const userModel = require("./model/UserModel");
 const emailSender = require("./utility/EmailSender");
 
 
@@ -121,10 +121,15 @@ app.use(cookieParser());
 //Signup
 
 const AuthRouter = require("./Routers/AuthRouter");
-const MovieRouter = require("./Routers/MovieRouters");
+const MovieRouter = require("./Routers/MoviesRouters");
+const TvShowsRouter = require("./Routers/TvRouter");
+const DiscoverRouter = require("./Routers/DiscoverRouter");
 
 app.use("/api/auth", AuthRouter);
-app.use("/api/auth", MovieRouter);
+app.use("/api/movies", MovieRouter);
+app.use("/api/tv", TvShowsRouter);
+app.use("/api/discover", DiscoverRouter);
+
 
 
 // fetching the data from TMDB api
