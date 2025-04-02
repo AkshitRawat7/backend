@@ -142,69 +142,56 @@ async function forgetPasswordHandler(req,res){
 }
 
 async function resetPasswordHandler(req,res){
-  try{
-    let resetDetails = req.body;
+      //  -> otp 
+    //  newPassword and newConfirmPassword 
+    // -> params -> id 
+    try {
+      const {email, password, confirmPasword, otp } = req.body;
+      /****
+       * 1. search user using id
+       * 
+       *      a.  not found -> invalid otp or session  
+       *      b. it's found 
+       *                  -> get the token  is matching&&check it's expiry>currentTime 
+       *                          -> update the user's password
+       *                              
+       * **/
 
-    if(!resetDetails.password == true || !resetDetails.confirmPassword == true || !resetDetails.otp == true  || resetDetails.password != resetDetails.confirmPassword){
-      res.status(401).json({
-        status: "failure",
-        message: "invalid request"
+      const user = await UserModel.findOne({ email });
+      if (user) {
+          if (otp && user.token == otp) {
+              let currentTime = Date.now();
+              if (currentTime < user.otpExpiry) {
+                  user.confirmPassword = confirmPasword;
+                  user.password = password;
+                  delete user.token;
+                  delete user.otpExpiry
+                  await user.save();
+                  res.status(200).json({
+                      "status": "success",
+                      message: "your password is updated"
+                  })
+              }
+          } else {
+              res.status(404).json({
+                  status: "failure",
+                  message: "otp is not found or wrong"
+              })
+          }
+
+      } else {
+          res.status(404).json({
+              status: "failure",
+              message: "no user with this email id found"
+          })
+      }
+  } catch (err) {
+      res.status(500).json({
+          message: err.message,
+          status: "failure"
       })
-    }
-
-    const userId = req.params.userId;
-
-    const user = await userModel.findById(userId);
-
-    if(!user){
-      return res.status(400).json({
-        status: "failure",
-        message: "user not found"
-      })
-    }
-
-    if(user.otp == undefined){
-      return res.status(400).json({
-        status:"failure",
-        message: "unauthorized access to reset Password"
-      })
-    }
-
-    if(Date.now()>user.otpExpiry){
-      return res.status(400).json({
-        status:"failure",
-        message: "otp expired"
-      })
-    }
-
-    if(user.otp != resetDetails.otp){
-      return res.status(400).json({
-        status:"failure",
-        message: "otp is incorrect"
-      })
-    }
-
-    user.password = resetDetails.password;
-    user.confirmPassword = resetDetails.confirmPassword;
-
-    // console.log("303", user);
-
-    user.otp = undefined;
-    user.otpExpiry = undefined;
-    await user.save();
-
-    res.status(200).json({
-      status: "success",
-      message: "password reset successfully"
-    })
-  }catch(err){
-    return res.status(500).json({
-      status: err.status,
-      message: "Failure"
-    })
   }
 }  
-
 
 /*****************middleware**********************/
 
@@ -236,5 +223,6 @@ module.exports = {
     loginHandler,
     forgetPasswordHandler,
     resetPasswordHandler,
-    protectedRouteMiddleWare
+    protectedRouteMiddleWare,
+    logoutController
 }
